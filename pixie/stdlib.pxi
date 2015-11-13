@@ -9,6 +9,8 @@
 
 (def sh (ffi-fn libc "system" [CCharP] CInt))
 (def printf (ffi-fn libc "printf" [CCharP] CInt :variadic? true))
+
+(def snprintf (ffi-fn libc "snprintf" [CCharP CInt CCharP] CInt :variadic? true))
 (def getenv (ffi-fn libc "getenv" [CCharP] CCharP))
 
 (def libedit (ffi-library (str "libedit." pixie.platform/so-ext)))
@@ -2974,3 +2976,15 @@ ex: (vary-meta x assoc :foo 42)"
    :added "0.1"}
   [x f & args]
   (with-meta x (apply f (meta x) args)))
+
+(def format
+  (let [f (fn f [buffer-size fmt xs]
+            (let [buff (buffer buffer-size)
+                  len (snprintf buff buffer-size fmt (mapv str xs))]
+              (if (> len buffer-size)
+                (f blen fmt xs)
+                (do
+                  (set-buffer-count! buff len)
+                  (transduce (map char) string-builder buff)))))]
+    (fn [fmt & xs]
+      (f 80 fmt xs))))
