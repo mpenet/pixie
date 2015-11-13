@@ -2982,9 +2982,12 @@ ex: (vary-meta x assoc :foo 42)"
             (let [buff (buffer buffer-size)
                   len (snprintf buff buffer-size fmt (mapv str xs))]
               (if (> len buffer-size)
-                (f len fmt xs)
+                (do (dispose! buff)
+                    (f len fmt xs))
                 (do
                   (set-buffer-count! buff len)
-                  (transduce (map char) string-builder buff)))))]
+                  (let [ret (transduce (map char) string-builder buff)]
+                    (dispose! buff)
+                    ret)))))]
     (fn [fmt & xs]
       (f 80 fmt xs))))
