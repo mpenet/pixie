@@ -2981,11 +2981,16 @@ ex: (vary-meta x assoc :foo 42)"
   (let [f (fn f [buffer-size fmt xs]
             (let [buff (buffer buffer-size)
                   len (snprintf buff buffer-size fmt (mapv str xs))]
-              (if (> len buffer-size)
+              (cond
+                (> len buffer-size)
                 (do
                   (dispose! buff)
                   (f len fmt xs))
+                (< len 0)
                 (do
+                  (dispose! buff)
+                  (throw [::FormatErr "format error"]))
+                :else (do
                   (set-buffer-count! buff len)
                   (let [ret (transduce (map char) string-builder buff)]
                     (dispose! buff)
