@@ -2980,7 +2980,7 @@ ex: (vary-meta x assoc :foo 42)"
 (def format
   (let [f (fn f [buffer-size fmt xs]
             (let [buff (buffer buffer-size)
-                  len (snprintf buff buffer-size fmt (mapv str xs))]
+                  len (snprintf buff buffer-size fmt xs)]
               (cond
                 (> len buffer-size)
                 (do
@@ -2996,4 +2996,4 @@ ex: (vary-meta x assoc :foo 42)"
                     (dispose! buff)
                     ret)))))]
     (fn [fmt & xs]
-      (f 80 fmt xs))))
+      (f 80 fmt (mapv str xs)))))
