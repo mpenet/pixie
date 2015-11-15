@@ -2978,22 +2978,22 @@ ex: (vary-meta x assoc :foo 42)"
   (with-meta x (apply f (meta x) args)))
 
 (def format
-  (let [f (fn f [buffer-size fmt xs]
+  (let [f (fn f [fmt xs buffer-size]
             (let [buff (buffer buffer-size)
-                  len (snprintf buff buffer-size fmt xs)]
+                  len (apply snprintf buff buffer-size fmt xs)]
               (cond
                 (> len buffer-size)
                 (do
                   (dispose! buff)
-                  (f len fmt xs))
+                  (f fmt xs len))
                 (< len 0)
                 (do
                   (dispose! buff)
-                  (throw [::FormatErr "format error"]))
+                  (throw [::pixie.stdlib.format (str "fmt:" fmt ", vals: " xs) ]))
                 :else (do
                   (set-buffer-count! buff len)
                   (let [ret (transduce (map char) string-builder buff)]
                     (dispose! buff)
                     ret)))))]
     (fn [fmt & xs]
-      (f 80 fmt (mapv str xs)))))
+      (f fmt (map str xs) 80))))
